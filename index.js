@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
+const cron = require('node-cron');
 
 const app = express();
 
@@ -11,6 +12,21 @@ app.use(bodyParser.json());
 
 // CORS middleware
 app.use(cors());
+
+const backendUrl = 'https://ecoblocks-server.onrender.com/send-email';
+
+// Schedule a cron job to ping the backend URL every 14 minutes
+cron.schedule('*/14 * * * *', () => {
+  https.get(backendUrl, (res) => {
+    if (res.statusCode === 200) {
+      console.log('Server is running.');
+    } else {
+      console.log('Server may be sleeping.');
+    }
+  }).on('error', (error) => {
+    console.error('Error pinging the server:', error);
+  });
+});
 
 // Create a SMTP transporter object
 const transporter = nodemailer.createTransport({
@@ -23,19 +39,22 @@ const transporter = nodemailer.createTransport({
     },
   });
 
-const sendMail = async (data) => {
+const sendMail = async (data, subject, receiverEmail) => {
     try {
         // send mail with defined transport object
         let info = await transporter.sendMail({
             from: "AACBlocks Nepal" , // sender address
-            to: 'codersaro@gmail.com', // list of receivers
-            subject: 'New Contact Form Submission', // Subject line
+            to: receiverEmail, // list of receivers
+            subject: subject, // Subject line
             html: `
                 <h3>Contact Details</h3>
                 <ul>
-                    <li><strong>Name:</strong> ${data.name}</li>
-                    <li><strong>Contact Number:</strong> ${data.contactNumber}</li>
+                    <li><strong>First Name:</strong> ${data.firstname}</li>
+                    <li><strong>Last Name:</strong> ${data.lastname}</li>
+                    <li><strong>Contact Number:</strong> ${data.number}</li>
+                    <li><strong>Location for Dealership:</strong> ${data.location}</li>
                     <li><strong>Email:</strong> ${data.email}</li>
+                    <li><strong>Expected Annual Turnover in NPR:</strong> ${data.turnover}</li>
                 </ul>
                 <h3>Message</h3>
                 <p>${data.message}</p>
@@ -50,10 +69,20 @@ const sendMail = async (data) => {
     }
 };
 
-// POST route to handle form submission
+// POST route to handle general contact form submission
 app.post('/send-email', async (req, res) => {
     try {
-        const result = await sendMail(req.body);
+        const result = await sendMail(req.body, 'New Contact Form Submission', 'codersaro@gmail.com');
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+});
+
+// POST route to handle dealer form submission
+app.post('/send-dealer-email', async (req, res) => {
+    try {
+        const result = await sendMail(req.body, 'New Dealer Inquiry', 'codersaro@gmail.com');
         res.status(200).json(result);
     } catch (error) {
         res.status(500).json({ success: false, message: 'Internal server error' });
