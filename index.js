@@ -39,25 +39,30 @@ const transporter = nodemailer.createTransport({
     },
   });
 
-const sendMail = async (data, subject, receiverEmail) => {
+  const sendMail = async (data, subject, receiverEmail) => {
     try {
         // send mail with defined transport object
         let info = await transporter.sendMail({
-            from: "AACBlocks Nepal" , // sender address
+            from: "AACBlocks Nepal <recipeeze.contact@gmail.com>", // sender address
             to: receiverEmail, // list of receivers
             subject: subject, // Subject line
             html: `
-                <h3>Contact Details</h3>
-                <ul>
-                    <li><strong>First Name:</strong> ${data.firstname}</li>
-                    <li><strong>Last Name:</strong> ${data.lastname}</li>
-                    <li><strong>Contact Number:</strong> ${data.number}</li>
-                    <li><strong>Location for Dealership:</strong> ${data.location}</li>
-                    <li><strong>Email:</strong> ${data.email}</li>
-                    <li><strong>Expected Annual Turnover in NPR:</strong> ${data.turnover}</li>
-                </ul>
-                <h3>Message</h3>
-                <p>${data.message}</p>
+                <div style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; padding: 20px; border-radius: 10px;">
+                    <h2 style="color: #007bff; text-align: center; margin-bottom: 20px;">New Dealer Inquiry</h2>
+                    <div style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
+                        <h3 style="color: #007bff; margin-bottom: 15px;">Contact Details</h3>
+                        <ul style="list-style-type: none; padding: 0;">
+                            <li style="margin-bottom: 10px;"><strong>First Name:</strong> ${data.firstname}</li>
+                            <li style="margin-bottom: 10px;"><strong>Last Name:</strong> ${data.lastname}</li>
+                            <li style="margin-bottom: 10px;"><strong>Contact Number:</strong> ${data.number}</li>
+                            <li style="margin-bottom: 10px;"><strong>Location for Dealership:</strong> ${data.location}</li>
+                            <li style="margin-bottom: 10px;"><strong>Email:</strong> ${data.email}</li>
+                            <li style="margin-bottom: 10px;"><strong>Expected Annual Turnover in NPR:</strong> ${data.turnover}</li>
+                        </ul>
+                        <h3 style="color: #007bff; margin-top: 20px; margin-bottom: 15px;">Message</h3>
+                        <p>${data.message}</p>
+                    </div>
+                </div>
             `
         });
 
@@ -69,10 +74,44 @@ const sendMail = async (data, subject, receiverEmail) => {
     }
 };
 
+//email to send contact info
+const sendMail2 = async (data, subject, receiverEmail) => {
+    try {
+        // send mail with defined transport object
+        let info = await transporter.sendMail({
+            from: "AACBlocks Nepal <recipeeze.contact@gmail.com>", // sender address
+            to: receiverEmail, // list of receivers
+            subject: subject, // Subject line
+            html: `
+                <div style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; padding: 20px; border-radius: 10px;">
+                    <h2 style="color: #007bff; text-align: center; margin-bottom: 20px;">New Contact Form Submission</h2>
+                    <div style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
+                        <h3 style="color: #007bff; margin-bottom: 15px;">Here's what they said</h3>
+                        <ul style="list-style-type: none; padding: 0;">
+                            <li style="margin-bottom: 10px;"><strong>Name:</strong> ${data.name}</li>
+                            <li style="margin-bottom: 10px;"><strong>Contact Number:</strong> ${data.contactNumber}</li>
+                            <li style="margin-bottom: 10px;"><strong>Email:</strong> ${data.email}</li>
+                        </ul>
+                        <h3 style="color: #007bff; margin-top: 20px; margin-bottom: 15px;">Message</h3>
+                        <p>${data.message}</p>
+                    </div>
+                </div>
+            `
+        });
+
+        console.log('Message sent: %s', info.messageId);
+        return { success: true, message: 'Your message was sent, thank you!' };
+    } catch (error) {
+        console.error('Error occurred:', error);
+        return { success: false, message: 'There was an error sending your message. Please try again later.' };
+    }
+};
+
+
 // POST route to handle general contact form submission
 app.post('/send-email', async (req, res) => {
     try {
-        const result = await sendMail(req.body, 'New Contact Form Submission', 'codersaro@gmail.com');
+        const result = await sendMail2(req.body, 'New Contact Form Submission', 'codersaro@gmail.com');
         res.status(200).json(result);
     } catch (error) {
         res.status(500).json({ success: false, message: 'Internal server error' });
